@@ -1,0 +1,2 @@
+ContactID,Amount,SendTo,Status
+string,string,string,string
