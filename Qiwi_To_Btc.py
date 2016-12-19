@@ -4,15 +4,19 @@ import pandas as pd
 import threading
 from time import sleep
 from configparser import ConfigParser
+import json
 
 parser = ConfigParser()
 parser.read('config.ini')
+
+with open('messages.json') as data_file:
+    messages = json.load(data_file)
 
 lc = LocalBitcoin.LocalBitcoin(parser.get('LocalBitcoin', 'Key'), parser.get('LocalBitcoin', 'Secret'))
 session = Qiwi.login(parser.get('Qiwi', 'Number'), parser.get('Qiwi', 'Password'))
 
 THREAD_INDEX = 0
-MAX_THREADS = parser.get('Bot', 'BuyMaxThreads')
+MAX_THREADS = int(parser.get('Bot', 'BuyMaxThreads'))
 threads = [0] * MAX_THREADS
 
 
@@ -69,7 +73,7 @@ def confirmOrder(threadID, contactIndex, contactID, sendTo, amount):
             if status == "Accepted":
                 response = lc.markContactAsPaid(contactID)
                 printResponse(response)
-                sendMessage(contactID, "Спасибо за обмен")
+                sendMessage(contactID, messages["thxMsg"])
             print(">>>>------------------<<<<")
             df0.set_value(contactIndex, 'Status', "Done")
             break
@@ -131,7 +135,7 @@ def sendMessage(contactID, message):
 
 
 def generateMessageToPay(amount, qiwiNr):
-    message = "Привет, готов выполнить перевод по Вашим реквизитам\nОтправлю " + str(amount) + " руб. на " + str(qiwiNr) + ",\nкак только получу от вас подтверждение.\nЕсли ДА, напишите +\nЕсли НЕТ, напишите -"
+    message = messages['buyInvoiceMsg'].replace("$amount", str(amount)).replace("$qiwiNr", str(qiwiNr))
 
     return message
 

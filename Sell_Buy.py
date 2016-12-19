@@ -1,12 +1,13 @@
 import LocalBitcoin
 import ScrapeAds
 from configparser import ConfigParser
+import json
 
 parser = ConfigParser()
 parser.read('config.ini')
 
-buyMsg = "QIWI карты - без комиссии\n------\nВНИМАНИЕ!  при переводе денежных средств из РФ в другие страны (Украина,  Казахстан, Киргизия и т.д.) сервис Киви взимает комиссию за перевод 1%,  её оплачивает получатель.\n"
-sellMsg = "только онлайн перевод с qiwi wallet"
+with open('messages.json') as data_file:
+    messages = json.load(data_file)
 
 urlBuyAds = "https://localbitcoins.com/buy-bitcoins-online/rub/qiwi/"
 urlSellAds = "https://localbitcoins.com/sell-bitcoins-online/rub/qiwi/"
@@ -93,11 +94,11 @@ def main():
     if adType == "sell":
         trade_type = "ONLINE_SELL"
         url = urlBuyAds
-        message = sellMsg
+        message = messages["sellMsg"]
     elif adType == "buy":
         trade_type = "ONLINE_BUY"
         url = urlSellAds
-        message = buyMsg
+        message = messages["buyMsg"]
     else:
         print("Incorrect type!!!")
         exit()
