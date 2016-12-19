@@ -76,9 +76,9 @@ def getStatus(lc, trade_type):
 
 
 def main():
-    aKey = "c51f949655f6e50482932c92e448bd2d"
-    sKey = "4e2754b9c601dc6f53b2d9f36c07877e834b7adb87bf4f1a7b1a267b2950516b"
-    username = "NewComPort"
+    aKey = ""
+    sKey = ""
+    username = ""
 
     # create lc instance
     lc = LocalBitcoin.LocalBitcoin(aKey, sKey)
