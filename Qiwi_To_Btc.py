@@ -3,15 +3,16 @@ import Qiwi
 import pandas as pd
 import threading
 from time import sleep
+from configparser import ConfigParser
 
+parser = ConfigParser()
+parser.read('config.ini')
 
-aKey = ""
-sKey = ""
-lc = LocalBitcoin.LocalBitcoin(aKey, sKey)
-session = Qiwi.login("+", "")
+lc = LocalBitcoin.LocalBitcoin(parser.get('LocalBitcoin', 'Key'), parser.get('LocalBitcoin', 'Secret'))
+session = Qiwi.login(parser.get('Qiwi', 'Number'), parser.get('Qiwi', 'Password'))
 
 THREAD_INDEX = 0
-MAX_THREADS = 3
+MAX_THREADS = parser.get('Bot', 'BuyMaxThreads')
 threads = [0] * MAX_THREADS
 
 

@@ -3,14 +3,15 @@ import Qiwi
 import pandas as pd
 import threading
 from time import sleep
+from configparser import ConfigParser
 
+parser = ConfigParser()
+parser.read('config.ini')
 
-aKey = ""
-sKey = ""
-lc = LocalBitcoin.LocalBitcoin(aKey, sKey)
+lc = LocalBitcoin.LocalBitcoin(parser.get('LocalBitcoin', 'Key'), parser.get('LocalBitcoin', 'Secret'))
 
 THREAD_INDEX = 0
-MAX_THREADS = 3
+MAX_THREADS = parser.get('Bot', 'SellMaxThreads')
 threads = [0] * MAX_THREADS
 
 
@@ -208,4 +209,3 @@ def main():
 
 if __name__ == '__main__':
     getContacts()
-    # main()

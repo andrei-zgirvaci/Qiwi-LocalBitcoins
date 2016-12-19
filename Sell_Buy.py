@@ -1,5 +1,9 @@
 import LocalBitcoin
 import ScrapeAds
+from configparser import ConfigParser
+
+parser = ConfigParser()
+parser.read('config.ini')
 
 buyMsg = "QIWI карты - без комиссии\n------\nВНИМАНИЕ!  при переводе денежных средств из РФ в другие страны (Украина,  Казахстан, Киргизия и т.д.) сервис Киви взимает комиссию за перевод 1%,  её оплачивает получатель.\n"
 sellMsg = "только онлайн перевод с qiwi wallet"
@@ -76,12 +80,12 @@ def getStatus(lc, trade_type):
 
 
 def main():
-    aKey = ""
-    sKey = ""
-    username = ""
+    global parser
+
+    username = parser.get('LocalBitcoin', 'Username')
 
     # create lc instance
-    lc = LocalBitcoin.LocalBitcoin(aKey, sKey)
+    lc = LocalBitcoin.LocalBitcoin(parser.get('LocalBitcoin', 'Key'), parser.get('LocalBitcoin', 'Secret'))
 
     adType = str(input("Select (sell/buy) type: "))
 
