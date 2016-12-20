@@ -1,15 +1,16 @@
-import LocalBitcoin
-import Qiwi
+import __init__
 import pandas as pd
 import threading
 from time import sleep
 from configparser import ConfigParser
 import json
+import LocalBitcoin
+import Qiwi
 
 parser = ConfigParser()
-parser.read('Config.ini')
+parser.read('../Config.ini')
 
-with open('Messages.json') as data_file:
+with open('../Messages.json') as data_file:
     messages = json.load(data_file)
 
 lc = LocalBitcoin.LocalBitcoin(parser.get('LocalBitcoin', 'Key'), parser.get('LocalBitcoin', 'Secret'))
@@ -59,7 +60,7 @@ def confirmOrder(threadID, contactIndex, contactID, sendTo, amount):
 
     # check an hour if money
     while time < 60:
-        df0 = pd.read_csv("Buy_Contacts.csv", sep=',')
+        df0 = pd.read_csv("../data/Buy_Contacts.csv", sep=',')
         if sent is False:
             print()
             sendMessage(contactID, generateMessageToPay(amount, sendTo))
@@ -101,7 +102,7 @@ def confirmOrder(threadID, contactIndex, contactID, sendTo, amount):
         print(">>>>------------------<<<<")
         df0.set_value(contactIndex, 'Status', "Closed")
 
-    df0.to_csv('Buy_Contacts.csv', sep=',', index=False, index_label=False)
+    df0.to_csv('../data/Buy_Contacts.csv', sep=',', index=False, index_label=False)
     THREAD_INDEX -= 1
     threads[threadID - 1] = 0
 
@@ -161,7 +162,7 @@ def getFreeContact(df0):
 
 
 def insertNewContact(newContactID, amount, sendTo):
-    df0 = pd.read_csv("Buy_Contacts.csv", sep=',')
+    df0 = pd.read_csv("../data/Buy_Contacts.csv", sep=',')
     contactIDs = df0.ContactID
 
     for i, contactID in enumerate(contactIDs):
@@ -172,7 +173,7 @@ def insertNewContact(newContactID, amount, sendTo):
             df0.set_value(i + 1, 'Amount', amount)
             df0.set_value(i + 1, 'SendTo', sendTo)
             print("New contactID(" + newContactID + ") inserted")
-            df0.to_csv('Buy_Contacts.csv', sep=',', index=False, index_label=False)
+            df0.to_csv('../data/Buy_Contacts.csv', sep=',', index=False, index_label=False)
 
 
 def getContacts():
@@ -203,7 +204,7 @@ def main():
         print("Saving orders...")
         # save all contacts
         getContacts()
-        df0 = pd.read_csv("Buy_Contacts.csv", sep=',')
+        df0 = pd.read_csv("../data/Buy_Contacts.csv", sep=',')
 
         # get a free contact
         print("\nGeting new contact...")
@@ -212,7 +213,7 @@ def main():
             print("\nLooking for free bots...")
             if THREAD_INDEX < MAX_THREADS:
                 print("Found a free bot, working...")
-                setCsvStatus(df0, "Buy_Contacts.csv", contactIndex, "Working")
+                setCsvStatus(df0, "../data/Buy_Contacts.csv", contactIndex, "Working")
                 createWorker(contactIndex, contactID, sendTo, amount)
             else:
                 print("No free bots left, waiting for one...")

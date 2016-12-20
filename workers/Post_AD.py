@@ -1,12 +1,13 @@
-import LocalBitcoin
-import ScrapeAds
+import __init__
 from configparser import ConfigParser
 import json
+import LocalBitcoin
+import ScrapeAds
 
 parser = ConfigParser()
-parser.read('Config.ini')
+parser.read('../Config.ini')
 
-with open('Messages.json') as data_file:
+with open('../Messages.json') as data_file:
     messages = json.load(data_file)
 
 urlBuyAds = "https://localbitcoins.com/buy-bitcoins-online/rub/qiwi/"
