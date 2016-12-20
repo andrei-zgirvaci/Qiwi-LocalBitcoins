@@ -7,9 +7,9 @@ from configparser import ConfigParser
 import json
 
 parser = ConfigParser()
-parser.read('config.ini')
+parser.read('Config.ini')
 
-with open('messages.json') as data_file:
+with open('Messages.json') as data_file:
     messages = json.load(data_file)
 
 lc = LocalBitcoin.LocalBitcoin(parser.get('LocalBitcoin', 'Key'), parser.get('LocalBitcoin', 'Secret'))

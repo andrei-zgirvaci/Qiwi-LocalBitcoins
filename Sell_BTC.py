@@ -7,9 +7,9 @@ from configparser import ConfigParser
 import json
 
 parser = ConfigParser()
-parser.read('config.ini')
+parser.read('Config.ini')
 
-with open('messages.json') as data_file:
+with open('Messages.json') as data_file:
     messages = json.load(data_file)
 
 lc = LocalBitcoin.LocalBitcoin(parser.get('LocalBitcoin', 'Key'), parser.get('LocalBitcoin', 'Secret'))
@@ -46,7 +46,7 @@ def confirmOrder(threadID, contactIndex, contactID, qiwiIndex, qiwiNr, password,
     # check an hour if money
     while time < 60:
         df0 = pd.read_csv("Sell_Contacts.csv", sep=',')
-        df1 = pd.read_csv("Qiwi.csv", sep=',')
+        df1 = pd.read_csv("Qiwi_Numbers.csv", sep=',')
         if checkIfMoneyRecieved(session, amount):
             print(">>>>------Bot(" + str(threadID) + ")------<<<<")
             print("Transaction recieved, releasing(" + str(contactID) + ")...")
@@ -72,7 +72,7 @@ def confirmOrder(threadID, contactIndex, contactID, qiwiIndex, qiwiNr, password,
 
     df0.to_csv('Sell_Contacts.csv', sep=',', index=False, index_label=False)
     df1.set_value(qiwiIndex, 'Status', None)
-    df1.to_csv('Qiwi.csv', sep=',', index=False, index_label=False)
+    df1.to_csv('Qiwi_Numbers.csv', sep=',', index=False, index_label=False)
     THREAD_INDEX -= 1
     threads[threadID - 1] = 0
 
@@ -186,7 +186,7 @@ def main():
         # save all contacts
         getContacts()
         df0 = pd.read_csv("Sell_Contacts.csv", sep=',')
-        df1 = pd.read_csv("Qiwi.csv", sep=',')
+        df1 = pd.read_csv("Qiwi_Numbers.csv", sep=',')
 
         # get a free contact
         print("\nGeting new contact...")
@@ -200,7 +200,7 @@ def main():
                 qiwiNr, password, qiwiIndex = getFreeQiwiNr(df1, amount)
                 if qiwiNr is not False:
                     setCsvStatus(df0, "Sell_Contacts.csv", contactIndex, "Working")
-                    setCsvStatus(df1, "Qiwi.csv", qiwiIndex, "Taken")
+                    setCsvStatus(df1, "Qiwi_Numbers.csv", qiwiIndex, "Taken")
                     print()
                     sendMessage(contactID, generateMessageToPay(amount, qiwiNr))
                     print()

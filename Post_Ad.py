@@ -4,9 +4,9 @@ from configparser import ConfigParser
 import json
 
 parser = ConfigParser()
-parser.read('config.ini')
+parser.read('Config.ini')
 
-with open('messages.json') as data_file:
+with open('Messages.json') as data_file:
     messages = json.load(data_file)
 
 urlBuyAds = "https://localbitcoins.com/buy-bitcoins-online/rub/qiwi/"
