@@ -132,9 +132,13 @@ def main():
                   ") is less than limit-price(" + str(limitPrice) + ")")
             price = limitPrice
 
+        parser.set('Bot', 'SellExchangeRate', str(price))
+
         if status is False:
                 # post new AD
                 print("Posting AD...")
+                with open('../Config.ini', 'w') as configfile:
+                    parser.write(configfile)
                 postAd(lc, price, trade_type, message)
         elif status[0] is True:
                 # edit AD
@@ -143,6 +147,8 @@ def main():
                 if float(oldPrice) != price:
                     print("\nChanging AD's price from(" + str(oldPrice)
                           + ") to (" + str(price) + ")")
+                    with open('../Config.ini', 'w') as configfile:
+                        parser.write(configfile)
                     editAd(lc, status[1], price, trade_type, message)
 
         if mode == "man":

@@ -31,9 +31,12 @@ def login(mylogin, mypassword):
 def getLastTransactionAmount(session):
     r = session.post("https://qiwi.com/user/report/list.action", data={'type': '1'})
     soup = BeautifulSoup(r.text,  "html.parser")
-    lastTranzaction = soup.findAll("div", {"class": "status_SUCCESS"})[0]
-    amount = lastTranzaction.findAll("div", {"class": "cash"})[0]
-    amount = amount.text.strip().split(" ", 1)[0].replace(",", ".")
+    try:
+        lastTransaction = soup.findAll("div", {"class": "status_SUCCESS"})[0]
+        amount = lastTransaction.findAll("div", {"class": "cash"})[0]
+        amount = amount.text.strip().split(" ", 1)[0].replace(",", ".")
+    except:
+        amount = 0
 
     return amount
 

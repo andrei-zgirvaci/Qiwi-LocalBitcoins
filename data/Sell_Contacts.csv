@@ -1,2 +1,2 @@
-ContactID,Amount,Status
-string,string,string
+ContactID,Amount,ExchangeRate,Status
+string,string,string,string

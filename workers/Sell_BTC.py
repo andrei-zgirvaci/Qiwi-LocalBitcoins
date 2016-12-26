@@ -153,12 +153,15 @@ def insertNewContact(newContactID, amount):
     df0 = pd.read_csv("../data/Sell_Contacts.csv", sep=',')
     contactIDs = df0.ContactID
 
+    exchange_rate = parser.get('Bot', 'SellExchangeRate')
+
     for i, contactID in enumerate(contactIDs):
         if contactID == newContactID:
             break
         elif i == len(contactIDs) - 1:
             df0.set_value(i + 1, 'ContactID', newContactID)
             df0.set_value(i + 1, 'Amount', amount)
+            df0.set_value(i + 1, 'ExchangeRate', exchange_rate)
             print("New contactID(" + newContactID + ") inserted")
             df0.to_csv('../data/Sell_Contacts.csv', sep=',', index=False, index_label=False)
 
