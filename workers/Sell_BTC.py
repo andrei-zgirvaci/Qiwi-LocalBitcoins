@@ -13,72 +13,72 @@ parser.read('../Config.ini')
 with open('../Messages.json') as data_file:
     messages = json.load(data_file)
 
-lc = LocalBitcoin.LocalBitcoin(parser.get('LocalBitcoin', 'Key'), parser.get('LocalBitcoin', 'Secret'))
+lc = LocalBitcoin.LocalBitcoin(parser.get('LocalBitcoins', 'Key'), parser.get('LocalBitcoins', 'Secret'))
 
-THREAD_INDEX = 0
-MAX_THREADS = int(parser.get('Bot', 'SellMaxThreads'))
-threads = [0] * MAX_THREADS
+thread_index = 0
+max_threads = int(parser.get('Bot', 'SellMaxThreads'))
+threads = [0] * max_threads
 
 
-def printResponse(response):
+def print_response(response):
     if "data" in response:
         print(response["data"]["message"])
     elif "error" in response:
         print(response["error"]["message"])
 
 
-def checkIfMoneyRecieved(session, amount):
-    amountRecieved = Qiwi.getLastTransactionAmount(session)
+def check_if_money_recieved(session, amount):
+    amount_recieved = Qiwi.getLastTransactionAmount(session)
 
-    if float(amount) == float(amountRecieved):
+    if float(amount) == float(amount_recieved):
         return True
     else:
         return False
 
 
-def confirmOrder(threadID, contactIndex, contactID, qiwiIndex, qiwiNr, password, amount):
+def confirm_order(thread_ID, contact_index, contact_ID, qiwi_index, qiwi_nr, password, amount):
     global lc
-    global THREAD_INDEX
+    global thread_index
     global threads
 
     time = 0
-    session = Qiwi.login(qiwiNr, password)
+    session = Qiwi.login(qiwi_nr, password)
 
     # check an hour if money
     while time < 60:
         df0 = pd.read_csv("../data/Sell_Contacts.csv", sep=',')
         df1 = pd.read_csv("../data/Qiwi_Numbers.csv", sep=',')
-        if checkIfMoneyRecieved(session, amount):
-            print(">>>>------Bot(" + str(threadID) + ")------<<<<")
-            print("Transaction recieved, releasing(" + str(contactID) + ")...")
-            response = lc.contactRelease(contactID)
-            printResponse(response)
-            sendMessage(contactID, messages["thxMsg"])
+        if check_if_money_recieved(session, amount):
+            print(">>>>------Bot(" + str(thread_ID) + ")------<<<<")
+            print("Transaction recieved, releasing(" + str(contact_ID) + ")...")
+            response = lc.contactRelease(contact_ID)
+            print_response(response)
+            send_message(contact_ID, messages["thxMsg"])
             print(">>>>------------------<<<<")
-            df0.set_value(contactIndex, 'Status', "Done")
+            df0.set_value(contact_index, 'Status', "Done")
             break
         else:
-            print(">>>>------Bot(" + str(threadID) + ")------<<<<")
-            print("Waiting for(" + str(amount) + ")RUB on " + str(qiwiNr) + "...")
+            print(">>>>------Bot(" + str(thread_ID) + ")------<<<<")
+            print("Waiting for(" + str(amount) + ")RUB on " + str(qiwi_nr) + "...")
             print(">>>>------------------<<<<")
         sleep(60)
         time += 1
 
     # if time passed, set order as canceled
     if time >= 60:
-        print(">>>>------Bot(" + str(threadID) + ")------<<<<")
-        print("1 hour passed, cancelling(" + str(contactID) + ")...")
+        print(">>>>------Bot(" + str(thread_ID) + ")------<<<<")
+        print("1 hour passed, cancelling(" + str(contact_ID) + ")...")
         print(">>>>------------------<<<<")
-        df0.set_value(contactIndex, 'Status', "Closed")
+        df0.set_value(contact_index, 'Status', "Closed")
 
     df0.to_csv('../data/Sell_Contacts.csv', sep=',', index=False, index_label=False)
-    df1.set_value(qiwiIndex, 'Status', None)
+    df1.set_value(qiwi_index, 'Status', None)
     df1.to_csv('../data/Qiwi_Numbers.csv', sep=',', index=False, index_label=False)
-    THREAD_INDEX -= 1
-    threads[threadID - 1] = 0
+    thread_index -= 1
+    threads[thread_ID - 1] = 0
 
 
-def findFreeThread():
+def find_free_thread():
     global threads
 
     for i in range(0, len(threads)):
@@ -86,87 +86,87 @@ def findFreeThread():
             return i
 
 
-def createWorker(contactIndex, contactID, qiwiIndex, qiwiNr, password, amount):
-    global THREAD_INDEX
+def create_worker(contact_index, contact_ID, qiwi_index, qiwi_nr, password, amount):
+    global thread_index
     global threads
 
-    threadID = findFreeThread()
-    t = threading.Thread(target=confirmOrder,
-                         args=(threadID + 1, contactIndex, contactID,
-                               qiwiIndex, qiwiNr, password, amount, ))
+    thread_ID = find_free_thread()
+    t = threading.Thread(target=confirm_order,
+                         args=(thread_ID + 1, contact_index, contact_ID,
+                               qiwi_index, qiwi_nr, password, amount,))
     t.daemon = True
-    THREAD_INDEX += 1
-    threads[threadID] = 1
+    thread_index += 1
+    threads[thread_ID] = 1
     t.start()
 
 
-def sendMessage(contactID, message):
+def send_message(contact_ID, message):
     global lc
 
-    response = lc.postMessageToContact(contactID, message)
-    printResponse(response)
+    response = lc.postMessageToContact(contact_ID, message)
+    print_response(response)
 
 
-def generateMessageToPay(amount, qiwiNr):
-    message = messages["sellInvoiceMsg"].replace("$amount", str(amount)).replace("$qiwiNr",  str(qiwiNr))
+def generate_message_to_pay(amount, qiwi_nr):
+    message = messages["sellInvoiceMsg"].replace("$amount", str(amount)).replace("$qiwi_nr", str(qiwi_nr))
 
     return message
 
 
-def setCsvStatus(dataSource, file, index, status):
-    dataSource.set_value(index, 'Status', status)
-    dataSource.to_csv(file, sep=',', index=False, index_label=False)
+def set_csv_status(data_source, file, index, status):
+    data_source.set_value(index, 'Status', status)
+    data_source.to_csv(file, sep=',', index=False, index_label=False)
 
 
-def getFreeQiwiNr(df1, amount):
-    qiwiNrs = df1.QiwiNr
-    passwords = df1.Password
+def get_free_qiwi_nr(df1, amount):
+    Qiwi_Nr = df1.QiwiNr
+    Password = df1.Password
     Status = df1.Status
 
-    for i, (qiwiNr, password, status) in enumerate(zip(qiwiNrs, passwords, Status)):
+    for i, (qiwi_nr, password, status) in enumerate(zip(Qiwi_Nr, Password, Status)):
         if pd.isnull(status):
-            qiwiNr = qiwiNr.replace('`', '')
-            session = Qiwi.login(qiwiNr, password)
-            if not checkIfMoneyRecieved(session, amount):
-                print("Got a new qiwi-number: " + str(qiwiNr))
-                return qiwiNr, password, i
+            qiwi_nr = qiwi_nr.replace('`', '')
+            session = Qiwi.login(qiwi_nr, password)
+            if not check_if_money_recieved(session, amount):
+                print("Got a new qiwi-number: " + str(qiwi_nr))
+                return qiwi_nr, password, i
     print("No more qiwi-numbers, waiting for free ones...")
 
     return False, False, False
 
 
-def getFreeContact(df0):
-    contactIDs = df0.ContactID
-    amounts = df0.Amount
+def get_free_contact(df0):
+    Contact_ID = df0.ContactID
+    Amount = df0.Amount
     Status = df0.Status
 
-    for i, (contactID, amount, status) in enumerate(zip(contactIDs, amounts, Status)):
+    for i, (contact_ID, amount, status) in enumerate(zip(Contact_ID, Amount, Status)):
         if pd.isnull(status):
-            print("Got a new contact: " + str(contactID) + ", with: " + str(amount))
-            return contactID, amount, i
+            print("Got a new contact: " + str(contact_ID) + ", with: " + str(amount))
+            return contact_ID, amount, i
     print("No more contacts, waiting for new ones...")
 
     return False, False, False
 
 
-def insertNewContact(newContactID, amount):
+def insert_new_contact(new_contact_ID, amount):
     df0 = pd.read_csv("../data/Sell_Contacts.csv", sep=',')
-    contactIDs = df0.ContactID
+    Contact_ID = df0.ContactID
 
     exchange_rate = parser.get('Bot', 'SellExchangeRate')
 
-    for i, contactID in enumerate(contactIDs):
-        if contactID == newContactID:
+    for i, contact_ID in enumerate(Contact_ID):
+        if contact_ID == new_contact_ID:
             break
-        elif i == len(contactIDs) - 1:
-            df0.set_value(i + 1, 'ContactID', newContactID)
+        elif i == len(Contact_ID) - 1:
+            df0.set_value(i + 1, 'ContactID', new_contact_ID)
             df0.set_value(i + 1, 'Amount', amount)
             df0.set_value(i + 1, 'ExchangeRate', exchange_rate)
-            print("New contactID(" + newContactID + ") inserted")
+            print("New contact_ID(" + new_contact_ID + ") inserted")
             df0.to_csv('../data/Sell_Contacts.csv', sep=',', index=False, index_label=False)
 
 
-def getContacts():
+def get_contacts():
     global lc
 
     result = lc.getDashboard()
@@ -175,41 +175,41 @@ def getContacts():
     for index in range(0, contacts):
         trade_type = result['data']['contact_list'][index]['data']['advertisement']['trade_type']
         if trade_type == "ONLINE_SELL":
-            contactID = result['data']['contact_list'][index]['data']['contact_id']
+            contact_ID = result['data']['contact_list'][index]['data']['contact_id']
             amount = result['data']['contact_list'][index]['data']['amount']
-            insertNewContact(str(contactID), amount)
+            insert_new_contact(str(contact_ID), amount)
 
 
 def main():
-    global THREAD_INDEX
-    global MAX_THREADS
+    global thread_index
+    global max_threads
 
     while True:
         print("--------------------------")
         print("Saving orders...")
         # save all contacts
-        getContacts()
+        get_contacts()
         df0 = pd.read_csv("../data/Sell_Contacts.csv", sep=',')
         df1 = pd.read_csv("../data/Qiwi_Numbers.csv", sep=',')
 
         # get a free contact
         print("\nGeting new contact...")
-        contactID, amount, contactIndex = getFreeContact(df0)
-        if contactID is not False:
+        contact_ID, amount, contact_index = get_free_contact(df0)
+        if contact_ID is not False:
             print("\nLooking for free bots...")
-            if THREAD_INDEX < MAX_THREADS:
+            if thread_index < max_threads:
                 print("Found a free bot, working...")
                 # get a free qiwi-number
                 print("\nGeting new qiwi-number...")
-                qiwiNr, password, qiwiIndex = getFreeQiwiNr(df1, amount)
-                if qiwiNr is not False:
-                    setCsvStatus(df0, "../data/Sell_Contacts.csv", contactIndex, "Working")
-                    setCsvStatus(df1, "../data/Qiwi_Numbers.csv", qiwiIndex, "Taken")
+                qiwi_nr, password, qiwi_index = get_free_qiwi_nr(df1, amount)
+                if qiwi_nr is not False:
+                    set_csv_status(df0, "../data/Sell_Contacts.csv", contact_index, "Working")
+                    set_csv_status(df1, "../data/Qiwi_Numbers.csv", qiwi_index, "Taken")
                     print()
-                    sendMessage(contactID, generateMessageToPay(amount, qiwiNr))
+                    send_message(contact_ID, generate_message_to_pay(amount, qiwi_nr))
                     print()
-                    createWorker(contactIndex, contactID,
-                                 qiwiIndex, qiwiNr, password, amount)
+                    create_worker(contact_index, contact_ID,
+                                  qiwi_index, qiwi_nr, password, amount)
             else:
                 print("No free bots left, waiting for one...")
         sleep(100)

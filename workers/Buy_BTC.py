@@ -13,32 +13,32 @@ parser.read('../Config.ini')
 with open('../Messages.json') as data_file:
     messages = json.load(data_file)
 
-lc = LocalBitcoin.LocalBitcoin(parser.get('LocalBitcoin', 'Key'), parser.get('LocalBitcoin', 'Secret'))
+lc = LocalBitcoin.LocalBitcoin(parser.get('LocalBitcoins', 'Key'), parser.get('LocalBitcoins', 'Secret'))
 session = Qiwi.login(parser.get('Qiwi', 'Number'), parser.get('Qiwi', 'Password'))
 
-THREAD_INDEX = 0
-MAX_THREADS = int(parser.get('Bot', 'BuyMaxThreads'))
-threads = [0] * MAX_THREADS
+thread_index = 0
+max_threads = int(parser.get('Bot', 'BuyMaxThreads'))
+threads = [0] * max_threads
 
 
-def printResponse(response):
+def print_response(response):
     if "data" in response:
         print(response['data']['message'])
     elif "error" in response:
         print(response['error']['message'])
 
 
-def getMessageCount(contactID):
-    response = lc.getContactMessages(contactID)
+def get_message_count(contact_ID):
+    response = lc.getContactMessages(contact_ID)
     count = response['data']['message_count']
 
     return count
 
 
-def checkMessageForChar(char, contactID):
+def check_message_for_char(char, contact_ID):
     try:
-        response = lc.getContactMessages(contactID)
-        count = getMessageCount(contactID)
+        response = lc.getContactMessages(contact_ID)
+        count = get_message_count(contact_ID)
         message = response['data']['message_list'][count-1]['msg']
         if char in message:
             return True
@@ -48,66 +48,66 @@ def checkMessageForChar(char, contactID):
     return False
 
 
-def confirmOrder(threadID, contactIndex, contactID, sendTo, amount):
+def confirm_order(thread_ID, contact_index, contact_ID, send_to, amount):
     global lc
     global session
-    global THREAD_INDEX
+    global thread_index
     global threads
 
     time = 0
     sent = False
-    oldCount = 0
+    old_count = 0
 
     # check an hour if money
     while time < 60:
         df0 = pd.read_csv("../data/Buy_Contacts.csv", sep=',')
         if sent is False:
             print()
-            sendMessage(contactID, generateMessageToPay(amount, sendTo))
-            oldCount = getMessageCount(contactID)
+            send_message(contact_ID, generate_message_to_pay(amount, send_to))
+            old_count = get_message_count(contact_ID)
             print()
             sent = True
-        if checkMessageForChar('+', contactID) and oldCount < getMessageCount(contactID):
-            print(">>>>------Bot(" + str(threadID) + ")------<<<<")
-            print("Transaction confirmed, releasing(" + str(contactID) + ")...")
-            status = Qiwi.createTransaction(session, sendTo, amount)
+        if check_message_for_char('+', contact_ID) and old_count < get_message_count(contact_ID):
+            print(">>>>------Bot(" + str(thread_ID) + ")------<<<<")
+            print("Transaction confirmed, releasing(" + str(contact_ID) + ")...")
+            status = Qiwi.createTransaction(session, send_to, amount)
             if status == "Accepted":
-                response = lc.markContactAsPaid(contactID)
-                printResponse(response)
-                sendMessage(contactID, messages["thxMsg"])
+                response = lc.markContactAsPaid(contact_ID)
+                print_response(response)
+                send_message(contact_ID, messages["thxMsg"])
             print(">>>>------------------<<<<")
-            df0.set_value(contactIndex, 'Status', "Done")
+            df0.set_value(contact_index, 'Status', "Done")
             break
-        elif checkMessageForChar('-', contactID) and oldCount < getMessageCount(contactID):
-            print(">>>>------Bot(" + str(threadID) + ")------<<<<")
-            print("User did not agree, cancelling(" + str(contactID) + ")...")
-            response = lc.cancelContact(contactID)
-            printResponse(response)
+        elif check_message_for_char('-', contact_ID) and old_count < get_message_count(contact_ID):
+            print(">>>>------Bot(" + str(thread_ID) + ")------<<<<")
+            print("User did not agree, cancelling(" + str(contact_ID) + ")...")
+            response = lc.cancelContact(contact_ID)
+            print_response(response)
             print(">>>>------------------<<<<")
-            df0.set_value(contactIndex, 'Status', "Closed")
+            df0.set_value(contact_index, 'Status', "Closed")
             break
         else:
-            print(">>>>------Bot(" + str(threadID) + ")------<<<<")
-            print("Waiting for(" + str(contactID) + ") to responde...")
+            print(">>>>------Bot(" + str(thread_ID) + ")------<<<<")
+            print("Waiting for(" + str(contact_ID) + ") to responde...")
             print(">>>>------------------<<<<")
         sleep(60)
         time += 1
 
     # if time passed, set order as canceled
     if time >= 60:
-        print(">>>>------Bot(" + str(threadID) + ")------<<<<")
-        print("1 hour passed, cancelling(" + str(contactID) + ")...")
-        response = lc.cancelContact(contactID)
-        printResponse(response)
+        print(">>>>------Bot(" + str(thread_ID) + ")------<<<<")
+        print("1 hour passed, cancelling(" + str(contact_ID) + ")...")
+        response = lc.cancelContact(contact_ID)
+        print_response(response)
         print(">>>>------------------<<<<")
-        df0.set_value(contactIndex, 'Status', "Closed")
+        df0.set_value(contact_index, 'Status', "Closed")
 
     df0.to_csv('../data/Buy_Contacts.csv', sep=',', index=False, index_label=False)
-    THREAD_INDEX -= 1
-    threads[threadID - 1] = 0
+    thread_index -= 1
+    threads[thread_ID - 1] = 0
 
 
-def findFreeThread():
+def find_free_thread():
     global threads
 
     for i in range(0, len(threads)):
@@ -115,68 +115,68 @@ def findFreeThread():
             return i
 
 
-def createWorker(contactIndex, contactID, sendTo, amount):
-    global THREAD_INDEX
+def create_worker(contact_index, contact_ID, send_to, amount):
+    global thread_index
     global threads
 
-    threadID = findFreeThread()
-    t = threading.Thread(target=confirmOrder,
-                         args=(threadID + 1, contactIndex, contactID, sendTo, amount, ))
+    thread_ID = find_free_thread()
+    t = threading.Thread(target=confirm_order,
+                         args=(thread_ID + 1, contact_index, contact_ID, send_to, amount,))
     t.daemon = True
-    THREAD_INDEX += 1
-    threads[threadID] = 1
+    thread_index += 1
+    threads[thread_ID] = 1
     t.start()
 
 
-def sendMessage(contactID, message):
+def send_message(contact_ID, message):
     global lc
 
-    response = lc.postMessageToContact(contactID, message)
-    printResponse(response)
+    response = lc.postMessageToContact(contact_ID, message)
+    print_response(response)
 
 
-def generateMessageToPay(amount, qiwiNr):
-    message = messages['buyInvoiceMsg'].replace("$amount", str(amount)).replace("$qiwiNr", str(qiwiNr))
+def generate_message_to_pay(amount, qiwi_nr):
+    message = messages['buyInvoiceMsg'].replace("$amount", str(amount)).replace("$qiwi_nr", str(qiwi_nr))
 
     return message
 
 
-def setCsvStatus(dataSource, file, index, status):
-    dataSource.set_value(index, 'Status', status)
-    dataSource.to_csv(file, sep=',', index=False, index_label=False)
+def set_csv_status(data_source, file, index, status):
+    data_source.set_value(index, 'Status', status)
+    data_source.to_csv(file, sep=',', index=False, index_label=False)
 
 
-def getFreeContact(df0):
-    contactIDs = df0.ContactID
-    SendTo = df0.SendTo
-    amounts = df0.Amount
+def get_free_contact(df0):
+    Contact_ID = df0.ContactID
+    Send_To = df0.SendTo
+    Amounts = df0.Amount
     Status = df0.Status
 
-    for i, (contactID, amount, sendTo, status) in enumerate(zip(contactIDs, amounts, SendTo, Status)):
+    for i, (contact_ID, amount, send_to, status) in enumerate(zip(Contact_ID, Amounts, Send_To, Status)):
         if pd.isnull(status):
-            print("Got a new contact: " + str(contactID) + ", qiwi(" + str(sendTo) + ") with: " + str(amount))
-            return contactID, amount, sendTo, i
+            print("Got a new contact: " + str(contact_ID) + ", qiwi(" + str(send_to) + ") with: " + str(amount))
+            return contact_ID, amount, send_to, i
     print("No more contacts, waiting for new ones...")
 
     return False, False, False, False
 
 
-def insertNewContact(newContactID, amount, sendTo):
+def insert_new_contact(new_contact_ID, amount, send_to):
     df0 = pd.read_csv("../data/Buy_Contacts.csv", sep=',')
-    contactIDs = df0.ContactID
+    Contact_ID = df0.ContactID
 
-    for i, contactID in enumerate(contactIDs):
-        if contactID == newContactID:
+    for i, contact_ID in enumerate(Contact_ID):
+        if contact_ID == new_contact_ID:
             break
-        elif i == len(contactIDs) - 1:
-            df0.set_value(i + 1, 'ContactID', newContactID)
+        elif i == len(Contact_ID) - 1:
+            df0.set_value(i + 1, 'ContactID', new_contact_ID)
             df0.set_value(i + 1, 'Amount', amount)
-            df0.set_value(i + 1, 'SendTo', sendTo)
-            print("New contactID(" + newContactID + ") inserted")
+            df0.set_value(i + 1, 'SendTo', send_to)
+            print("New contact_ID(" + new_contact_ID + ") inserted")
             df0.to_csv('../data/Buy_Contacts.csv', sep=',', index=False, index_label=False)
 
 
-def getContacts():
+def get_contacts():
     global lc
 
     result = lc.getDashboard()
@@ -185,36 +185,36 @@ def getContacts():
     for index in range(0, contacts):
         trade_type = result['data']['contact_list'][index]['data']['advertisement']['trade_type']
         if trade_type == "ONLINE_BUY":
-            contactID = result['data']['contact_list'][index]['data']['contact_id']
-            sendTo = result['data']['contact_list'][index]['data']['account_details']['phone_number']
+            contact_ID = result['data']['contact_list'][index]['data']['contact_id']
+            send_to = result['data']['contact_list'][index]['data']['account_details']['phone_number']
             amount = result['data']['contact_list'][index]['data']['amount']
-            if sendTo[1] != '7':
+            if send_to[1] != '7':
                 amount = float(amount)
                 amount -= amount * 0.01
                 amount = str(amount)
-            insertNewContact(str(contactID), amount, str(sendTo))
+            insert_new_contact(str(contact_ID), amount, str(send_to))
 
 
 def main():
-    global THREAD_INDEX
-    global MAX_THREADS
+    global thread_index
+    global max_threads
 
     while True:
         print("--------------------------")
         print("Saving orders...")
         # save all contacts
-        getContacts()
+        get_contacts()
         df0 = pd.read_csv("../data/Buy_Contacts.csv", sep=',')
 
         # get a free contact
-        print("\nGeting new contact...")
-        contactID, amount, sendTo, contactIndex = getFreeContact(df0)
-        if contactID is not False:
+        print("\nGetting new contact...")
+        contact_ID, amount, send_to, contact_index = get_free_contact(df0)
+        if contact_ID is not False:
             print("\nLooking for free bots...")
-            if THREAD_INDEX < MAX_THREADS:
+            if thread_index < max_threads:
                 print("Found a free bot, working...")
-                setCsvStatus(df0, "../data/Buy_Contacts.csv", contactIndex, "Working")
-                createWorker(contactIndex, contactID, sendTo, amount)
+                set_csv_status(df0, "../data/Buy_Contacts.csv", contact_index, "Working")
+                create_worker(contact_index, contact_ID, send_to, amount)
             else:
                 print("No free bots left, waiting for one...")
         sleep(100)

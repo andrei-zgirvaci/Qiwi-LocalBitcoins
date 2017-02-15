@@ -10,19 +10,19 @@ parser.read('../Config.ini')
 with open('../Messages.json') as data_file:
     messages = json.load(data_file)
 
-urlBuyAds = "https://localbitcoins.com/buy-bitcoins-online/rub/qiwi/"
-urlSellAds = "https://localbitcoins.com/sell-bitcoins-online/rub/qiwi/"
+url_buy_ads = "https://localbitcoins.com/buy-bitcoins-online/rub/qiwi/"
+url_sell_ads = "https://localbitcoins.com/sell-bitcoins-online/rub/qiwi/"
 
 
-def editAd(lc, adID, price, trade_type, message):
-    response = lc.editAd(adID, price, trade_type, message)
+def edit_ad(lc, ad_ID, price, trade_type, message):
+    response = lc.editAd(ad_ID, price, trade_type, message)
     if "data" in response:
         print(response["data"]["message"])
     elif "error" in response:
         print(response["error"]["message"])
 
 
-def postAd(lc, price, trade_type, message):
+def post_ad(lc, price, trade_type, message):
     response = lc.createAd(price, trade_type, message)
     if "data" in response:
         print(response["data"]["message"])
@@ -33,7 +33,7 @@ def postAd(lc, price, trade_type, message):
         print(response["error"]["message"])
 
 
-def getPrice(status, url, username, trade_type):
+def get_price(status, url, username, trade_type):
     ads = ScrapeAds.getAds(url, trade_type)
     print("--------------------------")
     print("First 2 prices:")
@@ -53,30 +53,32 @@ def getPrice(status, url, username, trade_type):
     return price
 
 
-def checkAd(response, index, trade_type):
+def check_ad(response, index, trade_type):
     if response['data']['ad_list'][index]['data']['trade_type'] == trade_type:
         return True
 
     return False
 
 
-def getStatus(lc, trade_type):
+def get_status(lc, trade_type):
     response = lc.getOwnAds()
     if int(response['data']['ad_count']) == 1:
-        if checkAd(response, 0, trade_type):
-            adID = str(response['data']['ad_list'][0]['data']['ad_id'])
-            return True, adID
+        if check_ad(response, 0, trade_type):
+            ad_ID = str(response['data']['ad_list'][0]['data']['ad_id'])
+            return True, ad_ID
         else:
             return False
-    if int(response['data']['ad_count']) == 2:
-        if checkAd(response, 0, trade_type):
-            adID = str(response['data']['ad_list'][0]['data']['ad_id'])
-            return True, adID
-        elif checkAd(response, 1, trade_type):
-            adID = str(response['data']['ad_list'][1]['data']['ad_id'])
-            return True, adID
+
+    elif int(response['data']['ad_count']) == 2:
+        if check_ad(response, 0, trade_type):
+            ad_ID = str(response['data']['ad_list'][0]['data']['ad_id'])
+            return True, ad_ID
+        elif check_ad(response, 1, trade_type):
+            ad_ID = str(response['data']['ad_list'][1]['data']['ad_id'])
+            return True, ad_ID
         else:
             return False
+
     elif int(response['data']['ad_count']) == 0:
         return False
 
@@ -84,21 +86,21 @@ def getStatus(lc, trade_type):
 def main():
     global parser
 
-    username = parser.get('LocalBitcoin', 'Username')
+    username = parser.get('LocalBitcoins', 'Username')
 
     # create lc instance
-    lc = LocalBitcoin.LocalBitcoin(parser.get('LocalBitcoin', 'Key'), parser.get('LocalBitcoin', 'Secret'))
+    lc = LocalBitcoin.LocalBitcoin(parser.get('LocalBitcoins', 'Key'), parser.get('LocalBitcoins', 'Secret'))
 
-    adType = str(input("Select (sell/buy) type: "))
+    ad_type = str(input("Select (sell/buy) type: "))
 
     # select type
-    if adType == "sell":
+    if ad_type == "sell":
         trade_type = "ONLINE_SELL"
-        url = urlBuyAds
+        url = url_buy_ads
         message = messages["sellMsg"]
-    elif adType == "buy":
+    elif ad_type == "buy":
         trade_type = "ONLINE_BUY"
-        url = urlSellAds
+        url = url_sell_ads
         message = messages["buyMsg"]
     else:
         print("Incorrect type!!!")
@@ -108,29 +110,29 @@ def main():
 
     # select mode
     if mode == "man":
-        limitPrice = 0
+        limit_price = 0
         price = float(input("Select price: "))
         print("--------------------------")
         print("Selected price: " + str(price))
     elif mode == "auto":
-        limitPrice = float(input("Select limit-price: "))
+        limit_price = float(input("Select limit-price: "))
     else:
         print("Incorrect mode!!!")
         exit()
 
     while True:
         # get if ad was posted or not
-        status = getStatus(lc, trade_type)
+        status = get_status(lc, trade_type)
 
         # get new price for auto-mode
         if mode == "auto":
-            price = getPrice(status, url, username, trade_type)
+            price = get_price(status, url, username, trade_type)
 
         # check if your price is < than limited one
-        if price < limitPrice:
+        if price < limit_price:
             print("\nPrice(" + str(price) +
-                  ") is less than limit-price(" + str(limitPrice) + ")")
-            price = limitPrice
+                  ") is less than limit-price(" + str(limit_price) + ")")
+            price = limit_price
 
         parser.set('Bot', 'SellExchangeRate', str(price))
 
@@ -139,7 +141,7 @@ def main():
                 print("Posting AD...")
                 with open('../Config.ini', 'w') as configfile:
                     parser.write(configfile)
-                postAd(lc, price, trade_type, message)
+                post_ad(lc, price, trade_type, message)
         elif status[0] is True:
                 # edit AD
                 ad = lc.getAd(status[1])
@@ -149,7 +151,7 @@ def main():
                           + ") to (" + str(price) + ")")
                     with open('../Config.ini', 'w') as configfile:
                         parser.write(configfile)
-                    editAd(lc, status[1], price, trade_type, message)
+                    edit_ad(lc, status[1], price, trade_type, message)
 
         if mode == "man":
             exit()
