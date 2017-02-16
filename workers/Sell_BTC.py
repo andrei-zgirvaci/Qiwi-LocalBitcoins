@@ -27,10 +27,10 @@ def print_response(response):
         print(response["error"]["message"])
 
 
-def check_if_money_recieved(session, amount):
-    amount_recieved = Qiwi.getLastTransactionAmount(session)
+def check_if_money_received(session, amount):
+    amount_received = Qiwi.getLastTransactionAmount(session)
 
-    if float(amount) == float(amount_recieved):
+    if float(amount) == float(amount_received):
         return True
     else:
         return False
@@ -48,12 +48,12 @@ def confirm_order(thread_ID, contact_index, contact_ID, qiwi_index, qiwi_nr, pas
     while time < 60:
         df0 = pd.read_csv("../data/Sell_Contacts.csv", sep=',')
         df1 = pd.read_csv("../data/Qiwi_Numbers.csv", sep=',')
-        if check_if_money_recieved(session, amount):
+        if check_if_money_received(session, amount):
             print(">>>>------Bot(" + str(thread_ID) + ")------<<<<")
-            print("Transaction recieved, releasing(" + str(contact_ID) + ")...")
+            print("Transaction received, releasing(" + str(contact_ID) + ")...")
             response = lc.contactRelease(contact_ID)
             print_response(response)
-            send_message(contact_ID, messages["thxMsg"])
+            send_message(contact_ID, messages["thx_msg"])
             print(">>>>------------------<<<<")
             df0.set_value(contact_index, 'Status', "Done")
             break
@@ -108,7 +108,7 @@ def send_message(contact_ID, message):
 
 
 def generate_message_to_pay(amount, qiwi_nr):
-    message = messages["sellInvoiceMsg"].replace("$amount", str(amount)).replace("$qiwi_nr", str(qiwi_nr))
+    message = messages["sell_invoice_msg"].replace("$amount", str(amount)).replace("$qiwi_nr", str(qiwi_nr))
 
     return message
 
@@ -127,7 +127,7 @@ def get_free_qiwi_nr(df1, amount):
         if pd.isnull(status):
             qiwi_nr = qiwi_nr.replace('`', '')
             session = Qiwi.login(qiwi_nr, password)
-            if not check_if_money_recieved(session, amount):
+            if not check_if_money_received(session, amount):
                 print("Got a new qiwi-number: " + str(qiwi_nr))
                 return qiwi_nr, password, i
     print("No more qiwi-numbers, waiting for free ones...")
@@ -200,7 +200,7 @@ def main():
             if thread_index < max_threads:
                 print("Found a free bot, working...")
                 # get a free qiwi-number
-                print("\nGeting new qiwi-number...")
+                print("\nGetting new qiwi-number...")
                 qiwi_nr, password, qiwi_index = get_free_qiwi_nr(df1, amount)
                 if qiwi_nr is not False:
                     set_csv_status(df0, "../data/Sell_Contacts.csv", contact_index, "Working")

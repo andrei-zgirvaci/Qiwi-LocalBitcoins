@@ -58,9 +58,10 @@ def confirm_order(thread_ID, contact_index, contact_ID, send_to, amount):
     sent = False
     old_count = 0
 
+    df0 = pd.read_csv("../data/Buy_Contacts.csv", sep=',')
+
     # check an hour if money
     while time < 60:
-        df0 = pd.read_csv("../data/Buy_Contacts.csv", sep=',')
         if sent is False:
             print()
             send_message(contact_ID, generate_message_to_pay(amount, send_to))
@@ -74,7 +75,7 @@ def confirm_order(thread_ID, contact_index, contact_ID, send_to, amount):
             if status == "Accepted":
                 response = lc.markContactAsPaid(contact_ID)
                 print_response(response)
-                send_message(contact_ID, messages["thxMsg"])
+                send_message(contact_ID, messages["thx_msg"])
             print(">>>>------------------<<<<")
             df0.set_value(contact_index, 'Status', "Done")
             break
@@ -136,7 +137,7 @@ def send_message(contact_ID, message):
 
 
 def generate_message_to_pay(amount, qiwi_nr):
-    message = messages['buyInvoiceMsg'].replace("$amount", str(amount)).replace("$qiwi_nr", str(qiwi_nr))
+    message = messages['buy_invoice_msg'].replace("$amount", str(amount)).replace("$qiwi_nr", str(qiwi_nr))
 
     return message
 

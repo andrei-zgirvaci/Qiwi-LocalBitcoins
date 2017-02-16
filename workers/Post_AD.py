@@ -26,7 +26,7 @@ def post_ad(lc, price, trade_type, message):
     response = lc.createAd(price, trade_type, message)
     if "data" in response:
         print(response["data"]["message"])
-        print("Successeful posted AD( "
+        print("Successful posted AD( "
               + str(response["data"]["ad_id"])
               + ") with price(" + str(price) + ")")
     elif "error" in response:
@@ -39,6 +39,8 @@ def get_price(status, url, username, trade_type):
     print("First 2 prices:")
     print(str(ads[0].user) + " - " + str(ads[0].price))
     print(str(ads[1].user) + " - " + str(ads[1].price))
+
+    price = False
 
     # get first price
     if status is False:
@@ -97,11 +99,11 @@ def main():
     if ad_type == "sell":
         trade_type = "ONLINE_SELL"
         url = url_buy_ads
-        message = messages["sellMsg"]
+        message = messages["sell_msg"]
     elif ad_type == "buy":
         trade_type = "ONLINE_BUY"
         url = url_sell_ads
-        message = messages["buyMsg"]
+        message = messages["buy_msg"]
     else:
         print("Incorrect type!!!")
         exit()
@@ -145,9 +147,9 @@ def main():
         elif status[0] is True:
                 # edit AD
                 ad = lc.getAd(status[1])
-                oldPrice = ad["data"]["ad_list"][0]["data"]["price_equation"]
-                if float(oldPrice) != price:
-                    print("\nChanging AD's price from(" + str(oldPrice)
+                old_price = ad["data"]["ad_list"][0]["data"]["price_equation"]
+                if float(old_price) != price:
+                    print("\nChanging AD's price from(" + str(old_price)
                           + ") to (" + str(price) + ")")
                     with open('../Config.ini', 'w') as configfile:
                         parser.write(configfile)
