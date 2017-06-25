@@ -1,7 +1,7 @@
 import __init__
 from configparser import ConfigParser
 import json
-import LocalBitcoin
+import LocalBitcoins
 import ScrapeAds
 
 parser = ConfigParser()
@@ -15,7 +15,7 @@ url_sell_ads = "https://localbitcoins.com/sell-bitcoins-online/rub/qiwi/"
 
 
 def edit_ad(lc, ad_ID, price, trade_type, message):
-    response = lc.editAd(ad_ID, price, trade_type, message)
+    response = lc.edit_ad(ad_ID, price, trade_type, message)
     if "data" in response:
         print(response["data"]["message"])
     elif "error" in response:
@@ -23,7 +23,7 @@ def edit_ad(lc, ad_ID, price, trade_type, message):
 
 
 def post_ad(lc, price, trade_type, message):
-    response = lc.createAd(price, trade_type, message)
+    response = lc.create_ad(price, trade_type, message)
     if "data" in response:
         print(response["data"]["message"])
         print("Successful posted AD( "
@@ -34,7 +34,7 @@ def post_ad(lc, price, trade_type, message):
 
 
 def get_price(status, url, username, trade_type):
-    ads = ScrapeAds.getAds(url, trade_type)
+    ads = ScrapeAds.get_ads(url, trade_type)
     print("--------------------------")
     print("First 2 prices:")
     print(str(ads[0].user) + " - " + str(ads[0].price))
@@ -63,7 +63,7 @@ def check_ad(response, index, trade_type):
 
 
 def get_status(lc, trade_type):
-    response = lc.getOwnAds()
+    response = lc.get_own_ads()
     if int(response['data']['ad_count']) == 1:
         if check_ad(response, 0, trade_type):
             ad_ID = str(response['data']['ad_list'][0]['data']['ad_id'])
@@ -91,7 +91,7 @@ def main():
     username = parser.get('LocalBitcoins', 'Username')
 
     # create lc instance
-    lc = LocalBitcoin.LocalBitcoin(parser.get('LocalBitcoins', 'Key'), parser.get('LocalBitcoins', 'Secret'))
+    lc = LocalBitcoins.LocalBitcoins(parser.get('LocalBitcoins', 'Key'), parser.get('LocalBitcoins', 'Secret'))
 
     ad_type = str(input("Select (sell/buy) type: "))
 
@@ -136,7 +136,7 @@ def main():
                   ") is less than limit-price(" + str(limit_price) + ")")
             price = limit_price
 
-        parser.set('Bot', 'SellExchangeRate', str(price))
+        parser.set('Bot', 'sell_exchange_rate', str(price))
 
         if status is False:
                 # post new AD
@@ -146,7 +146,7 @@ def main():
                 post_ad(lc, price, trade_type, message)
         elif status[0] is True:
                 # edit AD
-                ad = lc.getAd(status[1])
+                ad = lc.get_ad(status[1])
                 old_price = ad["data"]["ad_list"][0]["data"]["price_equation"]
                 if float(old_price) != price:
                     print("\nChanging AD's price from(" + str(old_price)

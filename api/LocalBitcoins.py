@@ -7,9 +7,9 @@ import requests
 from datetime import datetime
 
 
-class LocalBitcoin:
+class LocalBitcoins:
 
-    baseurl = 'https://localbitcoins.com'
+    base_url = 'https://localbitcoins.com'
 
     def __init__(self, hmac_auth_key, hmac_auth_secret, debug=False):
         self.hmac_auth_key = hmac_auth_key
@@ -19,36 +19,36 @@ class LocalBitcoin:
     """
     Returns public user profile information
     """
-    def getAccountInfo(self, username):
-        return self.sendRequest('/api/account_info/'
-                                + username + '/', '', 'get')
+    def get_account_info(self, username):
+        return self.send_request('/api/account_info/'
+                                 + username + '/', '', 'get')
 
     """
     Return the information of the currently
     logged in user (the owner of authentication token).
     """
-    def getMyself(self):
-        return self.sendRequest('/api/myself/', '', 'get')
+    def get_myself(self):
+        return self.send_request('/api/myself/', '', 'get')
 
     """
     get 50 ads
     """
-    def getAds(self):
-        return self.sendRequest('/api/ad-get/', 'ads', 'get')
+    def get_ads(self):
+        return self.send_request('/api/ad-get/', 'ads', 'get')
 
     """
     Get an ad
     """
-    def getAd(self, adID):
-        return self.sendRequest(('/api/ad-get/' + str(adID) + "/"), '', 'get')
+    def get_ad(self, adID):
+        return self.send_request(('/api/ad-get/' + str(adID) + "/"), '', 'get')
 
     """
     Create an ad
     """
-    def createAd(self, price, tradeType, message):
+    def create_ad(self, price, trade_type, message):
         params_template_sell = {
             'price_equation': price,
-            'trade_type': tradeType,
+            'trade_type': trade_type,
             'online_provider': 'QIWI',
             'city': 'Moldova',
             'countrycode': 'MD',
@@ -68,16 +68,16 @@ class LocalBitcoin:
             'min_amount': 50,
             'max_amount': 30000
         }
-        return self.sendRequest('/api/ad-create/',
-                                params_template_sell, 'post')
+        return self.send_request('/api/ad-create/',
+                                 params_template_sell, 'post')
     """
     Edit an ad
     """
-    def editAd(self, adID, price, tradeType, message):
+    def edit_ad(self, ad_ID, price, trade_type, message):
         params_template_sell = {
             'visible': '1',
             'price_equation': price,
-            'trade_type': tradeType,
+            'trade_type': trade_type,
             'online_provider': 'QIWI',
             'city': 'Moldova',
             'countrycode': 'MD',
@@ -96,107 +96,107 @@ class LocalBitcoin:
             'min_amount': 50,
             'max_amount': 30000
         }
-        return self.sendRequest(('/api/ad/' + str(adID) + "/"),
-                                params_template_sell, 'post')
+        return self.send_request(('/api/ad/' + str(ad_ID) + "/"),
+                                 params_template_sell, 'post')
 
     """
     Checks the given PIN code against the user's currently active PIN code.
     You can use this method to ensure the person
     using the session is the legitimate user.
     """
-    def checkPinCode(self, code):
-        return self.sendRequest('/api/pincode/', {'code': code}, 'post')
+    def check_pin_code(self, code):
+        return self.send_request('/api/pincode/', {'code': code}, 'post')
 
     """
     Return open and active contacts
     """
-    def getDashboard(self):
-        return self.sendRequest('/api/dashboard/', '', 'get')
+    def get_dashboard(self):
+        return self.send_request('/api/dashboard/', '', 'get')
 
     """
     Return released (successful) contacts
     """
-    def getDashboardReleased(self):
-        return self.sendRequest('/api/dashboard/released/', '', 'get')
+    def get_dashboard_released(self):
+        return self.send_request('/api/dashboard/released/', '', 'get')
 
     """
     Return canceled contacts
     """
-    def getDashboardCanceled(self):
-        return self.sendRequest('/api/dashboard/canceled/', '', 'get')
+    def get_dashboard_canceled(self):
+        return self.send_request('/api/dashboard/canceled/', '', 'get')
 
     """
     Return closed contacts, both released and canceled
     """
-    def getDashboardClosed(self):
-        return self.sendRequest('/api/dashboard/closed/', '', 'get')
+    def get_dashboard_closed(self):
+        return self.send_request('/api/dashboard/closed/', '', 'get')
 
     """
     Releases the escrow of contact specified by ID {contact_id}.
     On success there's a complimentary message on the data key.
     """
-    def contactRelease(self, contact_id):
-        return self.sendRequest('/api/contact_release/'
-                                + contact_id + '/', '', 'post')
+    def contact_release(self, contact_id):
+        return self.send_request('/api/contact_release/'
+                                 + contact_id + '/', '', 'post')
 
     """
     Releases the escrow of contact specified by ID {contact_id}.
     On success there's a complimentary message on the data key.
     """
-    def contactReleasePin(self, contact_id, pincode):
-        return self.sendRequest('/api/contact_release_pin/' + contact_id
-                                + '/', {'pincode': pincode}, 'post')
+    def contact_release_pin(self, contact_id, pincode):
+        return self.send_request('/api/contact_release_pin/' + contact_id
+                                 + '/', {'pincode': pincode}, 'post')
 
     """
     Reads all messaging from the contact. Messages are on the message_list key.
     On success there's a complimentary message on the data key.
     attachment_* fields exist only if there is an attachment.
     """
-    def getContactMessages(self, contact_id):
-        return self.sendRequest('/api/contact_messages/'
-                                + contact_id + '/', '', 'get')
+    def get_contact_messages(self, contact_id):
+        return self.send_request('/api/contact_messages/'
+                                 + contact_id + '/', '', 'get')
 
     """
     Marks a contact as paid.
     It is recommended to access this API through
     /api/online_buy_contacts/ entries' action key.
     """
-    def markContactAsPaid(self, contact_id):
-        return self.sendRequest('/api/contact_mark_as_paid/'
-                                + contact_id + '/', '', 'get')
+    def mark_contact_as_paid(self, contact_id):
+        return self.send_request('/api/contact_mark_as_paid/'
+                                 + contact_id + '/', '', 'get')
 
     """
     Post a message to contact
     """
-    def postMessageToContact(self, contact_id, message):
-        return self.sendRequest('/api/contact_message_post/'
-                                + contact_id + '/', {'msg': message}, 'post')
+    def post_message_to_contact(self, contact_id, message):
+        return self.send_request('/api/contact_message_post/'
+                                 + contact_id + '/', {'msg': message}, 'post')
 
     """
     Starts a dispute with the contact, if possible.
     You can provide a short description using topic.
     This helps support to deal with the problem.
     """
-    def startDispute(self, contact_id, topic=None):
+    def start_dispute(self, contact_id, topic=None):
         topic = ''
         if topic is not None:
             topic = {'topic': topic}
-        return self.sendRequest('/api/contact_dispute/'
-                                + contact_id + '/', topic, 'post')
+        return self.send_request('/api/contact_dispute/'
+                                 + contact_id + '/', topic, 'post')
 
     """
     Cancels the contact, if possible
     """
-    def cancelContact(self, contact_id):
-        return self.sendRequest('/api/contact_cancel/'
-                                + contact_id + '/', '', 'post')
+    def cancel_contact(self, contact_id):
+        return self.send_request('/api/contact_cancel/'
+                                 + contact_id + '/', '', 'post')
 
     """
     Attempts to fund an unfunded local contact from the seller's wallet.
     """
-    def fundContact(self, contact_id):
-        return self.sendRequest('/api/contact_fund/'
-                                + contact_id + '/', '', 'post')
+    def fund_contact(self, contact_id):
+        return self.send_request('/api/contact_fund/'
+                                 + contact_id + '/', '', 'post')
 
     """
     Attempts to create a contact to trade bitcoins.
@@ -207,22 +207,22 @@ class LocalBitcoin:
     Only non-floating LOCAL_SELL may return unfunded,
     all other trade types either fund or fail.
     """
-    def createContact(self, contact_id, ammount, message=None):
+    def create_contact(self, contact_id, amount, message=None):
         post = ''
         if message is None:
-            post = {'ammount': ammount}
+            post = {'ammount': amount}
         else:
-            post = {'ammount': ammount, 'message': message}
-        return self.sendRequest('/api/contact_create/'
-                                + contact_id + '/', post, 'post')
+            post = {'ammount': amount, 'message': message}
+        return self.send_request('/api/contact_create/'
+                                 + contact_id + '/', post, 'post')
 
     """
     Gets information about a single contact you are involved in.
     Same fields as in /api/contacts/.
     """
-    def getContactInfo(self, contact_id):
-        return self.sendRequest('/api/contact_info/'
-                                + contact_id + '/', '', 'get')
+    def get_contact_info(self, contact_id):
+        return self.send_request('/api/contact_info/'
+                                 + contact_id + '/', '', 'get')
 
     """
     contacts is a comma-separated list of contact
@@ -232,9 +232,9 @@ class LocalBitcoin:
     A maximum of 50 contacts can be requested at a time.
     The contacts are not returned in any particular order.
     """
-    def getContactsInfo(self, contacts):
-        return self.sendRequest('/api/contact_info/',
-                                {'contacts': contacts}, 'get')
+    def get_contacts_info(self, contacts):
+        return self.send_request('/api/contact_info/',
+                                 {'contacts': contacts}, 'get')
 
     """
     Returns maximum of 50 newest trade messages.
@@ -242,8 +242,8 @@ class LocalBitcoin:
     The list has same format as /api/contact_messages/,
     but each message has also contact_id field.
     """
-    def getRecentMessages(self):
-        return self.sendRequest('/api/recent_messages/', '', 'get')
+    def get_recent_messages(self):
+        return self.send_request('/api/recent_messages/', '', 'get')
 
     """
     Gives feedback to user.
@@ -254,19 +254,19 @@ class LocalBitcoin:
     and with block the message is mandatory.
 
     """
-    def postFeedbackToUser(self, username, feedback, message=None):
+    def post_feedback_to_user(self, username, feedback, message=None):
         post = {'feedback': feedback}
         if message is not None:
             post = {'feedback': feedback, 'msg': message}
 
-        return self.sendRequest('/api/feedback/'
-                                + username + '/', post, 'post')
+        return self.send_request('/api/feedback/'
+                                 + username + '/', post, 'post')
 
     """
     Gets information about the token owner's wallet balance.
     """
-    def getWallet(self):
-        return self.sendRequest('/api/wallet/', '', 'get')
+    def get_wallet(self):
+        return self.send_request('/api/wallet/', '', 'get')
 
     """
     Same as /api/wallet/ above, but only returns the message,
@@ -275,8 +275,8 @@ class LocalBitcoin:
     only the latest receiving address is ever returned by this call.)
     Use this instead if you don't care about transactions at the moment.
     """
-    def getWalletBallance(self):
-        return self.sendRequest('/api/wallet-balance/', '', 'get')
+    def get_wallet_ballance(self):
+        return self.send_request('/api/wallet-balance/', '', 'get')
 
     """
     Sends amount bitcoins from the token owner's wallet to address.
@@ -286,9 +286,9 @@ class LocalBitcoin:
     with the money permission.
     Call /api/logout/ to make the current token expire instantly.
     """
-    def walletSend(self, ammount, address):
-        return self.sendRequest('/api/wallet-send/',
-                                {'ammount': ammount,
+    def wallet_send(self, amount, address):
+        return self.send_request('/api/wallet-send/',
+                                 {'ammount': amount,
                                  'address': address}, 'post')
 
     """
@@ -302,9 +302,9 @@ class LocalBitcoin:
     please save some headache and get the real
     no-pin-required money permission instead.
     """
-    def walletSendWithPin(self, ammount, address, pincode):
-        return self.sendRequest('/api/wallet-send-pin/',
-                                {'ammount': ammount, 'address': address,
+    def wallet_send_with_pin(self, amount, address, pincode):
+        return self.send_request('/api/wallet-send-pin/',
+                                 {'ammount': amount, 'address': address,
                                  'pincode': pincode}, 'post')
 
     """
@@ -313,8 +313,8 @@ class LocalBitcoin:
     Note that this API may keep returning the same
     (unused) address if called repeatedly.
     """
-    def getWalletAddress(self):
-        return self.sendRequest('/api/wallet-addr/', '', 'post')
+    def get_wallet_address(self):
+        return self.send_request('/api/wallet-addr/', '', 'post')
 
     """
     Expires the current access token immediately.
@@ -322,7 +322,7 @@ class LocalBitcoin:
     confidential apps can turn in a refresh token.
     """
     def logout(self):
-        return self.sendRequest('/api/logout/', '', 'post')
+        return self.send_request('/api/logout/', '', 'post')
 
     """
     Lists the token owner's all ads on the data key ad_list,
@@ -331,10 +331,10 @@ class LocalBitcoin:
     Refer to the ad editing pages for the field meanings.
     List item structure is like so:
     """
-    def getOwnAds(self):
-        return self.sendRequest('/api/ads/', '', 'post')
+    def get_own_ads(self):
+        return self.send_request('/api/ads/', '', 'post')
 
-    def sendRequest(self, endpoint, params, method):
+    def send_request(self, endpoint, params, method):
 
         params_encoded = ''
         if params != '':
@@ -360,14 +360,14 @@ class LocalBitcoin:
         headers['Apiauth-Nonce'] = str(nonce)
         headers['Apiauth-Signature'] = signature
         if method == 'get':
-            response = requests.get(self.baseurl + endpoint,
+            response = requests.get(self.base_url + endpoint,
                                     headers=headers, params=params)
         else:
-            response = requests.post(self.baseurl + endpoint,
+            response = requests.post(self.base_url + endpoint,
                                      headers=headers, data=params)
 
         if self.debug is True:
-            print ('REQUEST: ' + self.baseurl + endpoint)
+            print ('REQUEST: ' + self.base_url + endpoint)
             print ('PARAMS: ' + str(params))
             print ('METHOD: ' + method)
             print ('RESPONSE: ' + response.text)

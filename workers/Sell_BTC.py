@@ -4,7 +4,7 @@ import threading
 from time import sleep
 from configparser import ConfigParser
 import json
-import LocalBitcoin
+import LocalBitcoins
 import Qiwi
 
 parser = ConfigParser()
@@ -13,10 +13,10 @@ parser.read('../Config.ini')
 with open('../Messages.json') as data_file:
     messages = json.load(data_file)
 
-lc = LocalBitcoin.LocalBitcoin(parser.get('LocalBitcoins', 'Key'), parser.get('LocalBitcoins', 'Secret'))
+lc = LocalBitcoins.LocalBitcoins(parser.get('LocalBitcoins', 'Key'), parser.get('LocalBitcoins', 'Secret'))
 
 thread_index = 0
-max_threads = int(parser.get('Bot', 'SellMaxThreads'))
+max_threads = int(parser.get('Bot', 'sell_max_threads'))
 threads = [0] * max_threads
 
 
@@ -28,7 +28,7 @@ def print_response(response):
 
 
 def check_if_money_received(session, amount):
-    amount_received = Qiwi.getLastTransactionAmount(session)
+    amount_received = Qiwi.get_last_transaction_amount(session)
 
     if float(amount) == float(amount_received):
         return True
@@ -44,14 +44,15 @@ def confirm_order(thread_ID, contact_index, contact_ID, qiwi_index, qiwi_nr, pas
     time = 0
     session = Qiwi.login(qiwi_nr, password)
 
+    df0 = pd.read_csv("../data/Sell_Contacts.csv", sep=',')
+    df1 = pd.read_csv("../data/Qiwi_Numbers.csv", sep=',')
+
     # check an hour if money
     while time < 60:
-        df0 = pd.read_csv("../data/Sell_Contacts.csv", sep=',')
-        df1 = pd.read_csv("../data/Qiwi_Numbers.csv", sep=',')
         if check_if_money_received(session, amount):
             print(">>>>------Bot(" + str(thread_ID) + ")------<<<<")
             print("Transaction received, releasing(" + str(contact_ID) + ")...")
-            response = lc.contactRelease(contact_ID)
+            response = lc.contact_release(contact_ID)
             print_response(response)
             send_message(contact_ID, messages["thx_msg"])
             print(">>>>------------------<<<<")
@@ -103,7 +104,7 @@ def create_worker(contact_index, contact_ID, qiwi_index, qiwi_nr, password, amou
 def send_message(contact_ID, message):
     global lc
 
-    response = lc.postMessageToContact(contact_ID, message)
+    response = lc.post_message_to_contact(contact_ID, message)
     print_response(response)
 
 
@@ -153,7 +154,7 @@ def insert_new_contact(new_contact_ID, amount):
     df0 = pd.read_csv("../data/Sell_Contacts.csv", sep=',')
     Contact_ID = df0.ContactID
 
-    exchange_rate = parser.get('Bot', 'SellExchangeRate')
+    exchange_rate = parser.get('Bot', 'sell_exchange_rate')
 
     for i, contact_ID in enumerate(Contact_ID):
         if contact_ID == new_contact_ID:
@@ -169,7 +170,7 @@ def insert_new_contact(new_contact_ID, amount):
 def get_contacts():
     global lc
 
-    result = lc.getDashboard()
+    result = lc.get_dashboard()
     contacts = result['data']['contact_count']
 
     for index in range(0, contacts):

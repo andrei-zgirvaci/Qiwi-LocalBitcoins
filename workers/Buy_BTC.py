@@ -4,7 +4,7 @@ import threading
 from time import sleep
 from configparser import ConfigParser
 import json
-import LocalBitcoin
+import LocalBitcoins
 import Qiwi
 
 parser = ConfigParser()
@@ -13,11 +13,11 @@ parser.read('../Config.ini')
 with open('../Messages.json') as data_file:
     messages = json.load(data_file)
 
-lc = LocalBitcoin.LocalBitcoin(parser.get('LocalBitcoins', 'Key'), parser.get('LocalBitcoins', 'Secret'))
+lc = LocalBitcoins.LocalBitcoins(parser.get('LocalBitcoins', 'Key'), parser.get('LocalBitcoins', 'Secret'))
 session = Qiwi.login(parser.get('Qiwi', 'Number'), parser.get('Qiwi', 'Password'))
 
 thread_index = 0
-max_threads = int(parser.get('Bot', 'BuyMaxThreads'))
+max_threads = int(parser.get('Bot', 'buy_max_threads'))
 threads = [0] * max_threads
 
 
@@ -29,7 +29,7 @@ def print_response(response):
 
 
 def get_message_count(contact_ID):
-    response = lc.getContactMessages(contact_ID)
+    response = lc.get_contact_messages(contact_ID)
     count = response['data']['message_count']
 
     return count
@@ -37,7 +37,7 @@ def get_message_count(contact_ID):
 
 def check_message_for_char(char, contact_ID):
     try:
-        response = lc.getContactMessages(contact_ID)
+        response = lc.get_contact_messages(contact_ID)
         count = get_message_count(contact_ID)
         message = response['data']['message_list'][count-1]['msg']
         if char in message:
@@ -71,9 +71,9 @@ def confirm_order(thread_ID, contact_index, contact_ID, send_to, amount):
         if check_message_for_char('+', contact_ID) and old_count < get_message_count(contact_ID):
             print(">>>>------Bot(" + str(thread_ID) + ")------<<<<")
             print("Transaction confirmed, releasing(" + str(contact_ID) + ")...")
-            status = Qiwi.createTransaction(session, send_to, amount)
+            status = Qiwi.create_transaction(session, send_to, amount)
             if status == "Accepted":
-                response = lc.markContactAsPaid(contact_ID)
+                response = lc.mark_contact_as_paid(contact_ID)
                 print_response(response)
                 send_message(contact_ID, messages["thx_msg"])
             print(">>>>------------------<<<<")
@@ -82,7 +82,7 @@ def confirm_order(thread_ID, contact_index, contact_ID, send_to, amount):
         elif check_message_for_char('-', contact_ID) and old_count < get_message_count(contact_ID):
             print(">>>>------Bot(" + str(thread_ID) + ")------<<<<")
             print("User did not agree, cancelling(" + str(contact_ID) + ")...")
-            response = lc.cancelContact(contact_ID)
+            response = lc.cancel_contact(contact_ID)
             print_response(response)
             print(">>>>------------------<<<<")
             df0.set_value(contact_index, 'Status', "Closed")
@@ -98,7 +98,7 @@ def confirm_order(thread_ID, contact_index, contact_ID, send_to, amount):
     if time >= 60:
         print(">>>>------Bot(" + str(thread_ID) + ")------<<<<")
         print("1 hour passed, cancelling(" + str(contact_ID) + ")...")
-        response = lc.cancelContact(contact_ID)
+        response = lc.cancel_contact(contact_ID)
         print_response(response)
         print(">>>>------------------<<<<")
         df0.set_value(contact_index, 'Status', "Closed")
@@ -132,7 +132,7 @@ def create_worker(contact_index, contact_ID, send_to, amount):
 def send_message(contact_ID, message):
     global lc
 
-    response = lc.postMessageToContact(contact_ID, message)
+    response = lc.post_message_to_contact(contact_ID, message)
     print_response(response)
 
 
@@ -180,7 +180,7 @@ def insert_new_contact(new_contact_ID, amount, send_to):
 def get_contacts():
     global lc
 
-    result = lc.getDashboard()
+    result = lc.get_dashboard()
     contacts = result['data']['contact_count']
 
     for index in range(0, contacts):
